@@ -28,7 +28,7 @@ class CognitoAuthProvider(AuthenticationProvider):
         user_pool_id: str,
         client_id: str,
         region: str,
-        admin_group_name: str = "ADMINS",
+        admin_group_name: str = "SUPER_ADMINS",
     ) -> None:
         self.user_pool_id = user_pool_id
         self.client_id = client_id
