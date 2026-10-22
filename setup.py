@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="amplify-auth",
-    version="0.1.1",
+    version="1.2.0",
     author="Eyal Politansky",
     author_email="10eyal10@gmail.com",
     description="Shared authentication providers for Amplify projects",

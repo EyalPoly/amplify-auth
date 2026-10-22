@@ -21,7 +21,7 @@ def auth_params():
         "user_pool_id": "us-east-1_testpool",
         "client_id": "test-client-id",
         "region": "us-east-1",
-        "admin_group_name": "ADMINS",
+        "admin_group_name": "SUPER_ADMINS",
     }
 
 
@@ -33,7 +33,7 @@ def cognito_provider(auth_params):
 
 @pytest.fixture
 def mock_id_token():
-    """Mock ID token with ADMINS group"""
+    """Mock ID token with SUPER_ADMINS group"""
     return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29nbml0bzpncm91cHMiOlsiQURNSU5TIl19.test"
 
 
@@ -50,6 +50,11 @@ class TestCognitoAuthProviderInitialization:
         assert cognito_provider.boto_cognito_admin_client is None
         assert cognito_provider._id_token is None
         assert cognito_provider._mfa_tokens is None
+
+    def test_default_admin_group_is_super_admins(self, auth_params):
+        del auth_params["admin_group_name"]
+        provider = CognitoAuthProvider(**auth_params)
+        assert provider.admin_group_name == "SUPER_ADMINS"
 
     def test_custom_admin_group(self, auth_params):
         """Test initialization with custom admin group"""
@@ -70,7 +75,7 @@ class TestStandardAuthentication:
         mock_cognito = Mock()
         mock_cognito.id_token = mock_id_token
         mock_cognito_class.return_value = mock_cognito
-        mock_jwt_decode.return_value = {"cognito:groups": ["ADMINS"]}
+        mock_jwt_decode.return_value = {"cognito:groups": ["SUPER_ADMINS"]}
 
         result = cognito_provider.authenticate("test@example.com", "password123")
 
@@ -175,7 +180,7 @@ class TestAdminAuthentication:
         """Test successful admin authentication"""
         mock_cognito_admin = Mock()
         mock_boto_client.return_value = mock_cognito_admin
-        mock_jwt_decode.return_value = {"cognito:groups": ["ADMINS"]}
+        mock_jwt_decode.return_value = {"cognito:groups": ["SUPER_ADMINS"]}
 
         mock_cognito_admin.admin_initiate_auth.return_value = {
             "AuthenticationResult": {
@@ -205,7 +210,7 @@ class TestAdminAuthentication:
         }
 
         with patch("amplify_auth.cognito_auth.jwt.decode") as mock_jwt:
-            mock_jwt.return_value = {"cognito:groups": ["ADMINS"]}
+            mock_jwt.return_value = {"cognito:groups": ["SUPER_ADMINS"]}
             result = cognito_provider.authenticate_admin(
                 "test@example.com", "password", aws_profile="my-profile"
             )
@@ -376,7 +381,7 @@ class TestCheckUserInAdminsGroup:
     @patch("amplify_auth.cognito_auth.jwt.decode")
     def test_user_in_admin_group(self, mock_jwt_decode, cognito_provider):
         """Test user is in admin group"""
-        mock_jwt_decode.return_value = {"cognito:groups": ["ADMINS", "USERS"]}
+        mock_jwt_decode.return_value = {"cognito:groups": ["SUPER_ADMINS", "USERS"]}
 
         cognito_provider._check_user_in_admins_group("test_token")
 
@@ -385,7 +390,7 @@ class TestCheckUserInAdminsGroup:
         """Test user is not in admin group"""
         mock_jwt_decode.return_value = {"cognito:groups": ["USERS"]}
 
-        with pytest.raises(PermissionError, match="User is not in ADMINS group"):
+        with pytest.raises(PermissionError, match="User is not in SUPER_ADMINS group"):
             cognito_provider._check_user_in_admins_group("test_token")
 
     @patch("amplify_auth.cognito_auth.jwt.decode")
@@ -393,7 +398,7 @@ class TestCheckUserInAdminsGroup:
         """Test user has no groups"""
         mock_jwt_decode.return_value = {}
 
-        with pytest.raises(PermissionError, match="User is not in ADMINS group"):
+        with pytest.raises(PermissionError, match="User is not in SUPER_ADMINS group"):
             cognito_provider._check_user_in_admins_group("test_token")
 
 

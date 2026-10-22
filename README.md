@@ -19,7 +19,7 @@ provider = CognitoAuthProvider(
     user_pool_id="us-east-1_xxxxx",
     client_id="your-client-id",
     region="us-east-1",
-    admin_group_name="ADMINS",  # optional, defaults to "ADMINS"
+    admin_group_name="SUPER_ADMINS",  # optional, defaults to "SUPER_ADMINS"
 )
 
 if provider.authenticate("user@example.com", "password"):
